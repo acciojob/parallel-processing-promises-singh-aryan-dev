@@ -8,43 +8,35 @@ const images = [
   { url: "https://picsum.photos/id/239/200/300" },
 ];
 
+// Returns a promise that resolves with the loaded <img> element,
+// or rejects with a descriptive error message if the download fails.
 function downloadImage(url) {
   return new Promise((resolve, reject) => {
-    const img = document.createElement("img");
-
-    img.onload = function () {
-      resolve(url);
-    };
-
-    img.onerror = function () {
-      reject(`Failed to download image: ${url}`);
-    };
-
+    const img = new Image();
     img.src = url;
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(`Failed to download image: ${url}`);
   });
 }
 
 function downloadImages() {
-  loading.textContent = "Loading...";
-  errorDiv.textContent = "";
+  // Reset UI state
   output.innerHTML = "";
+  error.textContent = "";
+  loading.style.display = "block";
 
   const promises = images.map((image) => downloadImage(image.url));
 
   Promise.all(promises)
-    .then((urls) => {
-      loading.textContent = "";
-
-      urls.forEach((url) => {
-        const img = document.createElement("img");
-        img.src = url;
-        output.appendChild(img);
-      });
+    .then((loadedImages) => {
+      loadedImages.forEach((img) => output.appendChild(img));
     })
-    .catch((error) => {
-      loading.textContent = "";
-      errorDiv.textContent = error;
+    .catch((err) => {
+      error.textContent = err;
+    })
+    .finally(() => {
+      loading.style.display = "none";
     });
 }
 
-downloadImages();
+btn.addEventListener("click", downloadImages);
